@@ -10,6 +10,18 @@ local function telescope_builtin(builtin, opts)
   end
 end
 
+local function notify_once(msg, level)
+  if vim.g.__lazyvim_cheatsheet_missing_notified then
+    return
+  end
+  vim.g.__lazyvim_cheatsheet_missing_notified = true
+  if vim.notify_once then
+    vim.notify_once(msg, level)
+  else
+    vim.notify(msg, level)
+  end
+end
+
 local function open_reviewer_cheatsheet()
   local candidates = {}
   local function add(path)
@@ -36,12 +48,13 @@ local function open_reviewer_cheatsheet()
       realpath = resolved
     end
     if vim.fn.filereadable(realpath) == 1 then
+      vim.g.__lazyvim_cheatsheet_missing_notified = nil
       vim.cmd("edit " .. vim.fn.fnameescape(realpath))
       return
     end
   end
 
-  vim.notify(
+  notify_once(
     "Reviewer cheatsheet not found. Set vim.g.lazyvim_reviewer_cheatsheet or $LAZYVIM_REVIEWER_CHEATSHEET.",
     vim.log.levels.WARN
   )
