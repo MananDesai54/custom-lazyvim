@@ -11,6 +11,16 @@ vim.o.updatetime = 300
 
 local hover_group = vim.api.nvim_create_augroup("lazyvim_cursor_hover_docs", { clear = true })
 
+local function buf_has_hover(bufnr)
+  local clients = vim.lsp.get_clients({ bufnr = bufnr })
+  for _, client in ipairs(clients) do
+    if client.server_capabilities and client.server_capabilities.hoverProvider then
+      return true
+    end
+  end
+  return false
+end
+
 vim.api.nvim_create_autocmd("LspAttach", {
   group = hover_group,
   callback = function(args)
@@ -24,6 +34,10 @@ vim.api.nvim_create_autocmd("LspAttach", {
       buffer = buf,
       callback = function()
         if vim.g.disable_auto_hover or vim.b[buf].disable_auto_hover then
+          return
+        end
+
+        if not buf_has_hover(buf) then
           return
         end
 
