@@ -74,7 +74,20 @@ Legendary auto-imports Lazy commands, keymaps, and Telescope pickers, so you can
 - **Go-to and actions**: use the shortcuts above (`gd`, `gr`, `<leader>cr`, `<leader>ca`, etc.) to jump or refactor quickly.
 
 ---
-## 7. Markdown Preview in Browser
+## 7. AI Studio Side Panel
+- **Open the panel**: `<leader>ai` or run `:AIStudio`. A right-hand scratch buffer lists available AI CLIs and helper actions.
+- **Launch/toggle providers** (pre-wired keys inside the panel or direct mappings):
+  - `c` / `<leader>ac` — Claude Code (`claude` CLI)
+  - `o` / `<leader>ao` — OpenCode CLI (`opencode`)
+  - `x` / `<leader>ax` — Codex CLI
+  - `p` / `<leader>ap` — Inflection Pi CLI (`pi`)
+  - `g` / `<leader>ag` — Gemini CLI (`gemini`)
+- These run in dedicated ToggleTerm vertical splits on the right. Replace `cmd` strings in `lua/config/ai_panel.lua` if your machine uses different binaries.
+- **Diff helpers from the same pane**: press `d` to open Diffview against HEAD or `h` to toggle inline gitsigns blame for quick visual context.
+- Close the panel with `q`. Terminals stay around, so you can re-toggle them later.
+
+---
+## 8. Markdown Preview in Browser
 1. Open a Markdown buffer.
 2. Press `<leader>mp` to launch the preview (served from `127.0.0.1:8889`). Your default browser opens automatically.
 3. `<leader>mt` toggles, `<leader>mP` stops the server.
@@ -86,20 +99,20 @@ Settings:
 - Combines preview + auto-refresh on save
 
 ---
-## 8. Learn Vim (in-editor assistant)
+## 9. Learn Vim (in-editor assistant)
 - `VimBeGood` plugin is installed. Press `<leader>tv` or run `:VimBeGood` for movement/drill exercises inside Neovim.
 - Your progress logs to `~/.local/share/nvim/vim-be-good.log` so you can track improvements.
 - Combine drills with Legendary/Which-key popovers to reinforce muscle memory as you practice in real code.
 
 ---
-## 9. Extras & Quality-of-Life
+## 10. Extras & Quality-of-Life
 - **Git Conflict highlights**: Conflict hunks use `n`/`]x` default maps from `akinsho/git-conflict.nvim` with diagnostics muted.
 - **Gitsigns inline blame**: Hover over any line and see commit info on the right.
 - **Diffview merge tool layout**: `diff4_mixed` is ready if you open merge conflicts.
 - **Legendary history**: Frequently used commands surface to the top automatically.
 
 ---
-## 10. Daily Workflow Suggestion
+## 11. Daily Workflow Suggestion
 1. `⌘⇧P` → "Diffview" to open whichever comparison you need.
 2. Navigate files with the left panel (`<leader>gF`) or `Tab` cycling.
 3. Stage/reset hunks (`<leader>gs`/`gr`) as you review.
