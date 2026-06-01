@@ -69,9 +69,27 @@ Legendary auto-imports Lazy commands, keymaps, and Telescope pickers, so you can
 
 ---
 ## 6. Code Intelligence & Hover Docs
-- **Auto hover**: stop on a symbol in normal mode and, after ~300ms, a floating tooltip appears with LSP hover info plus diagnostics near the cursor (mirrors Cursor’s inline info). Use `:let g:disable_auto_hover = 1` to disable globally or set `vim.b.disable_auto_hover = true` per buffer.
+- **Auto hover**: stop on a symbol in normal mode and, after ~300ms, a floating tooltip appears with LSP hover info plus diagnostics near the cursor (mirrors Cursor’s inline info). The popup only shows when the language server actually returns content, so empty symbols stay quiet. Use `:let g:disable_auto_hover = 1` to disable globally or set `vim.b.disable_auto_hover = true` per buffer.
 - **Diagnostics**: the same hover delay pops a rounded diagnostic float (non-focusable) for the current cursor.
-- **Go-to and actions**: use the shortcuts above (`gd`, `gr`, `<leader>cr`, `<leader>ca`, etc.) to jump or refactor quickly.
+
+### Go to Definition & Find Usages (IDE-style)
+Put the cursor on a symbol in normal mode:
+
+| Action | Shortcut |
+| --- | --- |
+| Go to definition | `gd` |
+| Go to declaration | `gD` |
+| Go to implementation | `gi` |
+| Go to type definition | `gy` |
+| Find references / usages | `gr` |
+| Hover docs | `K` |
+| Rename symbol (all usages) | `<leader>cr` |
+| Code action | `<leader>ca` |
+| Document symbols (Telescope) | `<leader>ss` |
+
+- **Jump back / forward**: `<C-o>` returns to where you jumped from, `<C-i>` goes forward again.
+- **References** open in a Telescope/quickfix list — `j`/`k` to move, `<CR>` to jump, `<Esc>` to close.
+- Needs an LSP attached for the filetype. Check with `:LspInfo`; if `gd`/`gr` do nothing, install the server via `:Mason`.
 
 ---
 ## 7. AI Studio Side Panel
