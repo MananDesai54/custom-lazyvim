@@ -2,7 +2,7 @@ return {
   {
     "akinsho/toggleterm.nvim",
     version = "*",
-    cmd = { "ToggleTerm", "TermExec" },
+    cmd = { "ToggleTerm", "TermExec", "AIStudio" },
     keys = {
       { "<leader>ai", function() require("config.ai_panel").open_panel() end, desc = "AI Studio" },
       { "<leader>ac", function() require("config.ai_panel").toggle("claude") end, desc = "Claude Code" },

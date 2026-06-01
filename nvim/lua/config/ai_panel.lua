@@ -1,5 +1,6 @@
 local M = {}
 
+local PANEL_WIDTH_RATIO = 0.34
 local providers_defs = {
   { id = "claude", label = "Claude Code", key = "c", cmd = "claude" },
   { id = "opencode", label = "OpenCode", key = "o", cmd = "opencode" },
@@ -9,18 +10,85 @@ local providers_defs = {
 }
 
 local diff_actions = {
-  { key = "d", label = "Open Diffview (visualize changes)", action = function()
+  {
+    key = "d",
+    label = "Open Diffview (visualize changes)",
+    action = function()
       vim.cmd("DiffviewOpen")
-    end },
-  { key = "h", label = "Toggle inline git hunks", action = function()
+    end,
+  },
+  {
+    key = "h",
+    label = "Toggle inline git hunks",
+    action = function()
       vim.cmd("Gitsigns toggle_current_line_blame")
-    end },
+    end,
+  },
 }
 
-local panel_state = {
-  win = nil,
-  buf = nil,
-}
+local panel_state = { win = nil, buf = nil }
+local TerminalClass
+local initialized = false
+local command_registered = false
+
+local function get_provider_defs()
+  if type(vim.g.ai_panel_providers) == "table" then
+    return vim.g.ai_panel_providers
+  end
+  return providers_defs
+end
+
+local function get_binary_from_cmd(cmd)
+  if not cmd or cmd == "" then
+    return nil
+  end
+  local parts = vim.split(cmd, "%s+", { trimempty = true })
+  return parts[1]
+end
+
+local function build_provider_table()
+  M.providers = {}
+  for _, def in ipairs(get_provider_defs()) do
+    local bin = def.bin or get_binary_from_cmd(def.cmd)
+    local available = bin and vim.fn.executable(bin) == 1
+    local term
+
+    if TerminalClass and available then
+      term = TerminalClass:new({
+        cmd = def.cmd,
+        close_on_exit = false,
+        direction = "vertical",
+        hidden = true,
+        on_open = function(t)
+          vim.api.nvim_buf_set_option(t.bufnr, "filetype", "terminal")
+        end,
+      })
+    end
+
+    M.providers[def.id] = {
+      def = def,
+      term = term,
+      available = available,
+      bin = bin,
+    }
+  end
+end
+
+local function ensure_command()
+  if command_registered then
+    return
+  end
+  vim.api.nvim_create_user_command("AIStudio", function()
+    require("config.ai_panel").open_panel()
+  end, { desc = "Open the AI Studio side panel" })
+  command_registered = true
+end
+
+local function ensure_filetype()
+  if vim.fn.has("nvim-0.10") == 1 then
+    vim.filetype.add({ extension = { ["ai_panel"] = "ai-panel" } })
+  end
+end
 
 local function close_panel()
   if panel_state.win and vim.api.nvim_win_is_valid(panel_state.win) then
@@ -33,21 +101,40 @@ local function close_panel()
   panel_state.buf = nil
 end
 
-function M.toggle(id)
-  local provider = M.providers and M.providers[id]
-  if not provider or not provider.term then
-    vim.notify("AI provider " .. (id or "") .. " missing", vim.log.levels.WARN)
-    return
+function M.ensure_setup()
+  if initialized then
+    return true
   end
-  provider.term:toggle()
+
+  local ok, toggleterm_terminal = pcall(require, "toggleterm.terminal")
+  if not ok then
+    vim.notify("toggleterm.terminal missing", vim.log.levels.ERROR)
+    return false
+  end
+
+  TerminalClass = toggleterm_terminal.Terminal or toggleterm_terminal
+  if not TerminalClass then
+    vim.notify("toggleterm Terminal class missing", vim.log.levels.ERROR)
+    return false
+  end
+
+  build_provider_table()
+  ensure_filetype()
+  ensure_command()
+  initialized = true
+  return true
 end
 
 local function render_panel()
+  if not M.ensure_setup() then
+    return
+  end
+
   vim.cmd("botright vsplit")
   local win = vim.api.nvim_get_current_win()
   local buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_win_set_buf(win, buf)
-  vim.api.nvim_win_set_width(win, math.floor(vim.o.columns * 0.34))
+  vim.api.nvim_win_set_width(win, math.floor(vim.o.columns * PANEL_WIDTH_RATIO))
 
   vim.bo[buf].buftype = "nofile"
   vim.bo[buf].bufhidden = "wipe"
@@ -62,8 +149,16 @@ local function render_panel()
     "",
   }
 
-  for _, provider in ipairs(providers_defs) do
-    lines[#lines + 1] = string.format(" %s  %s", provider.key, provider.label)
+  for _, provider in ipairs(get_provider_defs()) do
+    local status
+    local stored = M.providers[provider.id]
+    if stored and stored.available then
+      status = "[ready]"
+    else
+      local bin = stored and stored.bin or get_binary_from_cmd(provider.cmd)
+      status = string.format("[install %s]", bin or provider.cmd)
+    end
+    lines[#lines + 1] = string.format(" %s  %s  %s", provider.key, provider.label, status)
   end
 
   lines[#lines + 1] = ""
@@ -78,7 +173,7 @@ local function render_panel()
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
   vim.bo[buf].modifiable = false
 
-  for _, provider in ipairs(providers_defs) do
+  for _, provider in ipairs(get_provider_defs()) do
     vim.keymap.set("n", provider.key, function()
       M.toggle(provider.id)
     end, { buffer = buf, nowait = true })
@@ -96,6 +191,29 @@ local function render_panel()
   panel_state.buf = buf
 end
 
+function M.toggle(id)
+  if not M.ensure_setup() then
+    return
+  end
+
+  local provider = M.providers and M.providers[id]
+  if not provider then
+    vim.notify("AI provider " .. (id or "") .. " missing", vim.log.levels.WARN)
+    return
+  end
+  if not provider.available then
+    local label = provider.def and provider.def.label or id
+    local bin = provider.bin or provider.def.cmd
+    vim.notify(
+      string.format("%s CLI not found (expected `%s`). Install it or override `vim.g.ai_panel_providers`.", label, bin),
+      vim.log.levels.WARN
+    )
+    return
+  end
+
+  provider.term:toggle()
+end
+
 function M.open_panel()
   if panel_state.win and vim.api.nvim_win_is_valid(panel_state.win) then
     vim.api.nvim_set_current_win(panel_state.win)
@@ -104,31 +222,12 @@ function M.open_panel()
   render_panel()
 end
 
-function M.setup()
-  local ok, toggleterm_terminal = pcall(require, "toggleterm.terminal")
-  if not ok then
-    vim.notify("toggleterm.terminal missing", vim.log.levels.ERROR)
-    return
+function M.setup(force_refresh)
+  initialized = false
+  if force_refresh then
+    close_panel()
   end
-  local Terminal = toggleterm_terminal.Terminal
-
-  M.providers = {}
-  for _, def in ipairs(providers_defs) do
-    local term = Terminal:new({
-      cmd = def.cmd,
-      close_on_exit = false,
-      direction = "vertical",
-      hidden = true,
-      on_open = function(t)
-        vim.api.nvim_buf_set_option(t.bufnr, "filetype", "terminal")
-      end,
-    })
-    M.providers[def.id] = { def = def, term = term }
-  end
-
-  if vim.fn.has("nvim-0.10") == 1 then
-    vim.filetype.add({ extension = { ["ai_panel"] = "ai-panel" } })
-  end
+  M.ensure_setup()
 end
 
 return M

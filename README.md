@@ -82,7 +82,8 @@ Legendary auto-imports Lazy commands, keymaps, and Telescope pickers, so you can
   - `x` / `<leader>ax` — Codex CLI
   - `p` / `<leader>ap` — Inflection Pi CLI (`pi`)
   - `g` / `<leader>ag` — Gemini CLI (`gemini`)
-- These run in dedicated ToggleTerm vertical splits on the right. Replace `cmd` strings in `lua/config/ai_panel.lua` if your machine uses different binaries.
+- Each line shows `[ready]` or `[install <binary>]`. Install the matching CLI (via Brew/NPM/etc.) or override `vim.g.ai_panel_providers` to point at your own command.
+- These run in dedicated ToggleTerm vertical splits on the right. Replace or extend providers by editing `lua/config/ai_panel.lua` or setting `vim.g.ai_panel_providers` before Lazy loads.
 - **Diff helpers from the same pane**: press `d` to open Diffview against HEAD or `h` to toggle inline gitsigns blame for quick visual context.
 - Close the panel with `q`. Terminals stay around, so you can re-toggle them later.
 
