@@ -105,10 +105,12 @@ function M.open_panel()
 end
 
 function M.setup()
-  local ok, Terminal = pcall(require, "toggleterm.terminal")
+  local ok, toggleterm_terminal = pcall(require, "toggleterm.terminal")
   if not ok then
+    vim.notify("toggleterm.terminal missing", vim.log.levels.ERROR)
     return
   end
+  local Terminal = toggleterm_terminal.Terminal
 
   M.providers = {}
   for _, def in ipairs(providers_defs) do
