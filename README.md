@@ -9,7 +9,7 @@ A quick reference for your keyboard-only, diff-first LazyVim environment.
 - **Command palette**: Legendary.nvim provides a Cursor/VSCode-like palette.
 - **Browser Markdown preview**: Instant doc previews without leaving Neovim.
 - **Leader key = `<Space>`**: Any shortcut shown as `<leader>` starts with the space bar.
-- **Reference any time**: `<leader>?` opens this cheatsheet in the current window.
+- **Reference any time**: `<leader>?` opens this cheatsheet in the current window. On a new machine, either keep this README alongside the config repo or set `vim.g.lazyvim_reviewer_cheatsheet` / `$LAZYVIM_REVIEWER_CHEATSHEET` to point at any custom path.
 
 ---
 ## 2. Explorer (VSCode-style Sidebar)
@@ -44,7 +44,7 @@ A quick reference for your keyboard-only, diff-first LazyVim environment.
 
 ---
 ## 4. Shortcut discovery
-- `<leader>?` — open this cheatsheet (`~/asgard/lazyvim-reviewer-setup.md`).
+- `<leader>?` — open this cheatsheet (Lazy will look for `vim.g.lazyvim_reviewer_cheatsheet`, `$LAZYVIM_REVIEWER_CHEATSHEET`, this repo’s `README.md`, or `~/asgard/lazyvim-reviewer-setup.md`).
 - `<leader>P` or `⌘⇧P` — Legendary command palette (search commands, keymaps, autocmds).
 - Hold `<leader>` for a second — Which-key pops up grouped shortcuts.
 - `:Legendary keymaps` — list all registered keymaps from every plugin.

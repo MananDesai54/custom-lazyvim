@@ -10,6 +10,43 @@ local function telescope_builtin(builtin, opts)
   end
 end
 
+local function open_reviewer_cheatsheet()
+  local candidates = {}
+  local function add(path)
+    if not path or path == "" then
+      return
+    end
+    local expanded = vim.fn.expand(path)
+    if expanded ~= "" then
+      table.insert(candidates, expanded)
+    end
+  end
+
+  add(vim.g.lazyvim_reviewer_cheatsheet)
+  add(vim.env.LAZYVIM_REVIEWER_CHEATSHEET)
+  add("~/asgard/lazyvim-reviewer-setup.md")
+  add(vim.fn.stdpath("config") .. "/README.md")
+  add(vim.fn.stdpath("config") .. "/../README.md")
+  add(vim.loop.os_homedir() .. "/custom-lazyvim/README.md")
+
+  for _, path in ipairs(candidates) do
+    local realpath = path
+    local ok, resolved = pcall(vim.loop.fs_realpath, path)
+    if ok and resolved then
+      realpath = resolved
+    end
+    if vim.fn.filereadable(realpath) == 1 then
+      vim.cmd("edit " .. vim.fn.fnameescape(realpath))
+      return
+    end
+  end
+
+  vim.notify(
+    "Reviewer cheatsheet not found. Set vim.g.lazyvim_reviewer_cheatsheet or $LAZYVIM_REVIEWER_CHEATSHEET.",
+    vim.log.levels.WARN
+  )
+end
+
 map("n", "<leader>gv", "<cmd>DiffviewOpen<cr>", { desc = "Diffview (HEAD)" })
 map("n", "<leader>gV", "<cmd>DiffviewOpen HEAD~1<cr>", { desc = "Diffview vs HEAD~1" })
 map("n", "<leader>gq", "<cmd>DiffviewClose<cr>", { desc = "Close Diffview" })
@@ -22,7 +59,7 @@ map("n", "<leader>gP", "<cmd>Git pull --rebase<cr>", { desc = "Git pull --rebase
 map("n", "<leader>gb", "<cmd>Gitsigns blame_line<cr>", { desc = "Git blame line" })
 map("n", "<leader>e", "<cmd>Neotree toggle left reveal_force_cwd<cr>", { desc = "Explorer" })
 map("n", "<leader>E", "<cmd>Neotree focus<cr>", { desc = "Focus Explorer" })
-map("n", "<leader>?", "<cmd>e ~/asgard/lazyvim-reviewer-setup.md<cr>", { desc = "Open Reviewer cheatsheet" })
+map("n", "<leader>?", open_reviewer_cheatsheet, { desc = "Open Reviewer cheatsheet" })
 map("n", "<leader>lf", function()
   require("conform").format({ lsp_fallback = true })
 end, { desc = "Format buffer" })
