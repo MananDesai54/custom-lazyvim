@@ -26,4 +26,17 @@ return {
       opts.sources = opts.sources or { "filesystem", "buffers", "git_status" }
     end,
   },
+
+  {
+    "folke/noice.nvim",
+    opts = function(_, opts)
+      opts.presets = opts.presets or {}
+      opts.presets.long_message_to_split = true
+      opts.cmdline = opts.cmdline or {}
+      opts.cmdline.view = "cmdline"
+      opts.notify = opts.notify or {}
+      opts.notify.view = "notify"
+      opts.notify.replace = false
+    end,
+  },
 }
