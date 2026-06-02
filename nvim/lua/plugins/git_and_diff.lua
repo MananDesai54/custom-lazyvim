@@ -46,9 +46,9 @@ return {
     opts = function(_, opts)
       opts.current_line_blame = true
       opts.current_line_blame_opts = {
-        delay = 80,
+        delay = 100,
         ignore_whitespace = false,
-        virt_text_pos = "right_align",
+        virt_text_pos = "eol",
       }
       opts.current_line_blame_formatter = "  <author>, <author_time:%R> · <summary>"
       opts.signs = vim.tbl_deep_extend("force", opts.signs or {}, {
