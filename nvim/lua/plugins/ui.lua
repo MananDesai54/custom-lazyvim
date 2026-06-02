@@ -12,6 +12,11 @@ return {
         group_empty_dirs = true,
         hijack_netrw_behavior = "open_default",
         use_libuv_file_watcher = true,
+        filtered_items = {
+          visible = true, -- show filtered items (dotfiles) dimmed instead of hidden
+          hide_dotfiles = false,
+          hide_gitignored = false,
+        },
       }, opts.filesystem or {})
 
       opts.buffers = vim.tbl_deep_extend("force", {
