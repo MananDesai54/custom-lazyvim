@@ -33,7 +33,7 @@ return {
       opts.presets = opts.presets or {}
       opts.presets.long_message_to_split = true
       opts.cmdline = opts.cmdline or {}
-      opts.cmdline.view = "cmdline"
+      opts.cmdline.view = "cmdline_popup" -- floating command line instead of bottom row
       opts.notify = opts.notify or {}
       opts.notify.view = "notify"
       opts.notify.replace = false
