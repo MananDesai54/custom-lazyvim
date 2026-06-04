@@ -31,22 +31,39 @@ local function open_project(dir)
     pcall(persistence.save)
   end
 
-  -- Wipe current buffers so the new project opens clean.
+  -- Wipe current buffers so the new project opens clean, then switch cwd.
   vim.cmd("silent! %bdelete")
   vim.cmd("cd " .. vim.fn.fnameescape(dir))
 
-  -- Load the session for the new cwd if one exists; otherwise open the picker.
-  if ok and persistence.load then
-    persistence.load()
+  -- Restore the session only if one was saved for THIS exact directory
+  -- (matched by persistence's cwd[+branch] key). current() must run after
+  -- the cd above so it reflects the new cwd and its git branch. If no
+  -- session file exists, open clean with the explorer at the project root.
+  local restored = false
+  if ok then
+    local session = persistence.current()
+    if session and vim.fn.filereadable(session) == 0 then
+      -- No branch-specific session; fall back to the branch-less one.
+      session = persistence.current({ branch = false })
+    end
+    if session and vim.fn.filereadable(session) == 1 then
+      pcall(persistence.load)
+      restored = true
+    end
   end
 
   vim.schedule(function()
-    if vim.fn.argc() == 0 and #vim.fn.getbufinfo({ buflisted = 1 }) == 0 then
+    if not restored or #vim.fn.getbufinfo({ buflisted = 1 }) == 0 then
       pcall(function()
-        require("snacks").picker.files({ cwd = dir })
+        require("neo-tree.command").execute({
+          action = "show",
+          source = "filesystem",
+          position = "left",
+          dir = dir,
+        })
       end)
     end
-    vim.notify("Opened project: " .. dir)
+    vim.notify((restored and "Restored session: " or "Opened project: ") .. dir)
   end)
 end
 
