@@ -10,5 +10,7 @@ opt.signcolumn = "yes:2"
 opt.scrolloff = 5
 opt.wrap = true
 opt.linebreak = true
+opt.number = true
+opt.relativenumber = false
 opt.diffopt:append({ "linematch:60", "algorithm:histogram" })
 opt.fillchars:append({ diff = "╱" })
