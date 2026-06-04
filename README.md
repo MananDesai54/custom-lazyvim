@@ -13,7 +13,7 @@ A quick reference for your keyboard-only, diff-first LazyVim environment.
 
 ---
 ## 2. Explorer (VSCode-style Sidebar)
-- Toggle the sidebar: `<leader>e` (Space → `e`).
+- Auto-opens on startup so the workspace always starts with the sidebar visible. Use `<leader>e` to toggle it after that.
 - Focus the sidebar without closing it: `<leader>E`.
 - Neo-tree mirrors VSCode behaviour: left aligned, follows your current file, and auto-refreshes on file changes.
 - Sources available inside the sidebar: filesystem, open buffers, and git status (switch via `<tab>` inside the panel).

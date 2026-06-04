@@ -1,6 +1,60 @@
 return {
   {
     "nvim-neo-tree/neo-tree.nvim",
+    init = function()
+      local function open_neo_tree()
+        if package.loaded["neo-tree.command"] then
+          require("neo-tree.command").execute({
+            action = "show",
+            source = "filesystem",
+            position = "left",
+          })
+        else
+          vim.schedule(function()
+            pcall(require, "neo-tree.command")
+            if package.loaded["neo-tree.command"] then
+              require("neo-tree.command").execute({
+                action = "show",
+                source = "filesystem",
+                position = "left",
+              })
+            end
+          end)
+        end
+      end
+
+      local function open_if_applicable()
+        if vim.bo.filetype == "neo-tree" then
+          return
+        end
+        open_neo_tree()
+      end
+
+      local argc = vim.fn.argc()
+      if argc == 0 then
+        vim.api.nvim_create_autocmd("User", {
+          pattern = "VeryLazy",
+          once = true,
+          callback = open_if_applicable,
+        })
+      else
+        local argv = vim.fn.argv()
+        local has_directory = false
+        for _, arg in ipairs(argv) do
+          if vim.fn.isdirectory(arg) == 1 then
+            has_directory = true
+            break
+          end
+        end
+        if has_directory then
+          vim.api.nvim_create_autocmd("User", {
+            pattern = "VeryLazy",
+            once = true,
+            callback = open_if_applicable,
+          })
+        end
+      end
+    end,
     opts = function(_, opts)
       opts.window = opts.window or {}
       opts.window.position = "left"
