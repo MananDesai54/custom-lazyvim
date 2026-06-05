@@ -18,7 +18,7 @@ local function project_roots()
   }
 end
 
-local function open_project(dir)
+local function open_project(dir, restore)
   dir = vim.fn.fnamemodify(vim.fn.expand(dir), ":p")
   if vim.fn.isdirectory(dir) == 0 then
     vim.notify("Not a directory: " .. dir, vim.log.levels.WARN)
@@ -35,15 +35,15 @@ local function open_project(dir)
   vim.cmd("silent! %bdelete")
   vim.cmd("cd " .. vim.fn.fnameescape(dir))
 
-  -- Restore the session only if one was saved for THIS exact directory
-  -- (matched by persistence's cwd[+branch] key). current() must run after
-  -- the cd above so it reflects the new cwd and its git branch. If no
-  -- session file exists, open clean with the explorer at the project root.
+  -- Default: open the project CLEAN with the explorer rooted at the folder.
+  -- Auto-restoring is intentionally OFF here: persistence saves whichever
+  -- buffers happened to be open under a directory, so restoring would keep
+  -- resurrecting stale subfolder buffers (e.g. backend/env/.env). Pass
+  -- restore=true (`:OpenProject! <dir>`) to opt into restoring the session.
   local restored = false
-  if ok then
+  if restore and ok then
     local session = persistence.current()
     if session and vim.fn.filereadable(session) == 0 then
-      -- No branch-specific session; fall back to the branch-less one.
       session = persistence.current({ branch = false })
     end
     if session and vim.fn.filereadable(session) == 1 then
@@ -93,7 +93,7 @@ local function fd_dir_command()
   return cmd
 end
 
-local function pick_directory()
+local function pick_directory(restore)
   local ok_tb, builtin = pcall(require, "telescope.builtin")
   local cmd = fd_dir_command()
 
@@ -102,7 +102,7 @@ local function pick_directory()
       local actions = require("telescope.actions")
       local state = require("telescope.actions.state")
       builtin.find_files({
-        prompt_title = "Open Project Folder",
+        prompt_title = restore and "Open Project Folder (restore session)" or "Open Project Folder",
         find_command = cmd,
         path_display = { "absolute" },
         attach_mappings = function(_, map)
@@ -110,7 +110,7 @@ local function pick_directory()
             local entry = state.get_selected_entry()
             actions.close(bufnr)
             if entry then
-              open_project(entry.path or entry.value)
+              open_project(entry.path or entry.value, restore)
             end
           end
           map("i", "<CR>", open)
@@ -127,24 +127,28 @@ local function pick_directory()
   -- Fallback: plain input prompt with path completion.
   vim.ui.input({ prompt = "Open project folder: ", completion = "dir" }, function(input)
     if input and input ~= "" then
-      open_project(input)
+      open_project(input, restore)
     end
   end)
 end
 
+-- :OpenProject [dir]  -> open clean (explorer at root)
+-- :OpenProject! [dir] -> open and restore the saved session for that dir
 vim.api.nvim_create_user_command("OpenProject", function(opts)
+  local restore = opts.bang
   if opts.args ~= "" then
-    open_project(opts.args)
+    open_project(opts.args, restore)
   else
-    pick_directory()
+    pick_directory(restore)
   end
-end, { nargs = "?", complete = "dir", desc = "Open a folder as a project (new session)" })
+end, { nargs = "?", bang = true, complete = "dir", desc = "Open a folder as a project (clean; ! to restore session)" })
 
 return {
   {
     "nvim-telescope/telescope.nvim",
     keys = {
-      { "<leader>fo", "<cmd>OpenProject<cr>", desc = "Open project folder (new session)" },
+      { "<leader>fo", "<cmd>OpenProject<cr>", desc = "Open project folder (clean)" },
+      { "<leader>fO", "<cmd>OpenProject!<cr>", desc = "Open project folder (restore session)" },
     },
   },
   {
